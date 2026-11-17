@@ -263,6 +263,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       state = AuthState(status: AuthStatus.authenticated, user: user);
+
+      // Users approved at sign-up skip checkAuth(), so initialize FCM here too.
+      await FcmService.initialize();
     } on DioException catch (e) {
       String message;
 
