@@ -129,6 +129,36 @@ class AppConfig {
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Coins & Store
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Name of the in-app currency. Always "BE" in capitals — in lowercase
+  /// "be coins" reads like the verb.
+  static const coinName = 'BE Coin';
+  static const coinNamePlural = 'BE Coins';
+
+  /// Coin face gradient, from the highlight to the deep rim.
+  static const coinGoldLight = Color(0xFFFFE28A);
+  static const coinGold = Color(0xFFFFC53D);
+  static const coinGoldDeep = Color(0xFFE8960C);
+
+  /// The engraved mark and inner ring on the coin face.
+  static const coinInk = Color(0xFF7A4A00);
+
+  /// Coin amounts: bright gold on dark surfaces, deep amber on light ones.
+  static Color coinTextColor(bool isDark) =>
+      isDark ? accentGold : warningAccentDark;
+
+  /// Fill for coin pills and the balance card.
+  static Color coinSurfaceColor(bool isDark) => isDark
+      ? accentGold.withValues(alpha: 0.10)
+      : const Color(0xFFFFF5DC);
+
+  /// Border for coin pills and the balance card.
+  static Color coinBorderColor(bool isDark) =>
+      accentGold.withValues(alpha: isDark ? 0.28 : 0.6);
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Helpers
   // ─────────────────────────────────────────────────────────────────────────
 

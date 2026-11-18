@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/app_config.dart';
-import '../../../core/navigation/app_shell.dart';
+import '../../../core/navigation/app_tab.dart';
 import '../../quiz/data/quiz_models.dart';
 import '../../quiz/data/quiz_repository.dart';
 
@@ -11,9 +11,6 @@ import '../../quiz/data/quiz_repository.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const int _pageSize = 10;
-
-// History tab index in AppShell's bottom nav (kept in sync with app_shell.dart).
-const int _historyTabIndex = 1;
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -33,7 +30,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   bool _isLoadingMore = false;
   String? _error;
 
-  ProviderSubscription<int>? _tabListener;
+  ProviderSubscription<AppTab>? _tabListener;
 
   @override
   void initState() {
@@ -46,11 +43,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     // moment the user actually looks at the screen — not just on app start.
     Future.microtask(() {
       if (!mounted) return;
-      _tabListener = ref.listenManual<int>(selectedTabIndexProvider, (
+      _tabListener = ref.listenManual<AppTab>(selectedTabProvider, (
         previous,
         next,
       ) {
-        if (next == _historyTabIndex && previous != _historyTabIndex) {
+        if (next == AppTab.history && previous != AppTab.history) {
           _refresh();
         }
       });
