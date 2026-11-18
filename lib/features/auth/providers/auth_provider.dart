@@ -2,6 +2,8 @@
 ///
 /// This file contains the state notifier responsible for sign-in, sign-up,
 /// profile completion, and auth status transitions.
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/enums/auth_status.dart';
@@ -386,7 +388,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(clearError: true);
   }
 
-  Future<void> sendOtp(String phoneNumber) async {
+  Future<void> sendOtp(String phoneNumber, {int retryCount = 0}) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     // Check connectivity before attempting OTP send
@@ -406,7 +408,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
         // Auto-verification handled
       },
 
-      verificationFailed: (e) {
+      verificationFailed: (e) async {
+        // debugPrint('🔥 OTP ERROR CODE: ${e.code}');
+        // debugPrint('🔥 OTP ERROR MESSAGE: ${e.message}');
+
+        // Known iOS Firebase SDK probe race condition (Issue #16672):
+        // On cold launch / first probe, checkNotificationForwarding can briefly race.
+        // A single automatic retry after 1.5 seconds resolves it.
+        if (e.code == 'notification-not-forwarded' && retryCount < 1) {
+          debugPrint('🔄 Retrying OTP verification in 1.5s (resolving iOS probe race condition)...');
+          await Future.delayed(const Duration(milliseconds: 1500));
+          return sendOtp(phoneNumber, retryCount: retryCount + 1);
+        }
+
         String message;
 
         switch (e.code) {
@@ -434,6 +448,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
           default:
             // message = e.message ?? 'Failed to send OTP. Please try again.';
             message = 'Failed to send OTP. Please try again.';
+          // default:
+          //   debugPrint('🔥 Firebase OTP error code: ${e.code}');
+          //   debugPrint('🔥 Firebase OTP error message: ${e.message}');
+          //   message = e.message ?? 'Failed to send OTP. Please try again.';
         }
 
         state = state.copyWith(isLoading: false, errorMessage: message);
