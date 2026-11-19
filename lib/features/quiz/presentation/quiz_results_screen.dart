@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/quiz_models.dart';
 import '../providers/quiz_providers.dart';
+import 'quiz_coin_reward.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../config/app_config.dart';
 import '../../../shared/widgets/shared_widgets.dart';
@@ -54,9 +55,19 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
 
   bool _sequenceStarted = false;
 
+  /// Set once the "Your result" card has popped in. The BECoins card waits
+  /// for this so the two don't animate on top of each other.
+  bool _coinStageReached = false;
+
+  /// Kept from initState so dispose() can leave the quiz: Riverpod doesn't
+  /// allow `ref` once the widget is unmounted, which happens before
+  /// dispose() runs.
+  late final QuizRuntimeController _runtime;
+
   @override
   void initState() {
     super.initState();
+    _runtime = ref.read(quizRuntimeControllerProvider(widget.quizId).notifier);
 
     for (int i = 0; i < 110; i++) {
       _particles.add(_Particle.random(i));
@@ -171,11 +182,21 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
 
     if (!mounted) return;
     _cardCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 350));
+
+    if (!mounted) return;
+    setState(() => _coinStageReached = true);
   }
 
   @override
   void dispose() {
-    ref.read(quizRuntimeControllerProvider(widget.quizId).notifier).leaveQuiz();
+    // Leave the quiz once this screen is fully gone. Doing it right here
+    // would reset the runtime state while this widget is still subscribed
+    // to it, which tries to rebuild a widget that's being removed.
+    final runtime = _runtime;
+    Future.microtask(() {
+      if (runtime.mounted) runtime.leaveQuiz();
+    });
     _headerCtrl.dispose();
     _thirdCtrl.dispose();
     _secondCtrl.dispose();
@@ -267,6 +288,11 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
     // size), independent of the top-10-only leaderboard slice above.
     final totalParticipants = quizState.totalParticipants;
 
+    // Coins come with the targeted `finalResults` event. Nothing is shown
+    // when the quiz doesn't reward coins or the student earned none.
+    final myResult = quizState.myFinalResult;
+    final showCoins = _coinStageReached && (myResult?.hasCoins ?? false);
+
     return Scaffold(
       backgroundColor: AppConfig.scaffoldColor(isDark),
       body: Stack(
@@ -338,7 +364,9 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$totalParticipants players competed',
+                            '$totalParticipants '
+                            '${totalParticipants == 1 ? 'player' : 'players'} '
+                            'competed',
                             style: TextStyle(
                               fontSize: 13,
                               color: AppConfig.mutedTextColor(isDark),
@@ -356,15 +384,22 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
                 Expanded(
                   flex: 5,
                   child: ClipRect(
-                    child: _AnimatedPodium(
-                      top1: top1,
-                      top2: top2,
-                      top3: top3,
-                      thirdRise: _thirdRise,
-                      secondRise: _secondRise,
-                      firstScale: _firstScale,
-                      firstFade: _firstFade,
-                      firstGlowCtrl: _firstGlowCtrl,
+                    // The podium has a fixed natural height (~275pt for the
+                    // winner's column). On phones where this area is shorter,
+                    // shrink it to fit instead of overflowing; it never grows.
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.bottomCenter,
+                      child: _AnimatedPodium(
+                        top1: top1,
+                        top2: top2,
+                        top3: top3,
+                        thirdRise: _thirdRise,
+                        secondRise: _secondRise,
+                        firstScale: _firstScale,
+                        firstFade: _firstFade,
+                        firstGlowCtrl: _firstGlowCtrl,
+                      ),
                     ),
                   ),
                 ),
@@ -399,6 +434,20 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
                               totalParticipants: totalParticipants,
                               isDark: isDark,
                             ),
+                          ),
+                          // BECoins earned. Grows in smoothly, so the
+                          // leaderboard below eases down instead of jumping,
+                          // even when the coins arrive after the podium.
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 350),
+                            curve: Curves.easeOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: showCoins
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 14),
+                                    child: QuizCoinReward(result: myResult!),
+                                  )
+                                : const SizedBox(width: double.infinity),
                           ),
                           const SizedBox(height: 20),
                           _FullLeaderboardSection(

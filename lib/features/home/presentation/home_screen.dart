@@ -10,6 +10,8 @@ import '../../../core/navigation/route_observer.dart';
 import '../../history/presentation/history_screen.dart' show formatHistoryDate;
 import '../../quiz/data/quiz_models.dart';
 import '../../quiz/providers/quiz_providers.dart';
+import '../../coins/presentation/coin_amount_chip.dart';
+import '../../coins/presentation/coin_basics.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Countdown provider — ticks every second so quiz card timers update live
@@ -935,6 +937,13 @@ class _LastResultCard extends StatelessWidget {
                         color: AppConfig.lastResultMutedText(isDark),
                       ),
                     ),
+                    if (result.coinsEarned > 0) ...[
+                      const SizedBox(height: 10),
+                      CoinAmountChip(
+                        amount: result.coinsEarned,
+                        label: '${coinsLabel(result.coinsEarned)} earned',
+                      ),
+                    ],
                   ],
                 ),
               ),
