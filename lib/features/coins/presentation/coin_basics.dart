@@ -19,7 +19,7 @@ String formatCoins(int value) {
   return buffer.toString();
 }
 
-/// The currency name for [count]: "BECoin" or "BECoins".
+/// The currency name for [count]: "BI Coin" or "BI Coins".
 String coinsLabel(int count) =>
     count == 1 ? AppConfig.coinName : AppConfig.coinNamePlural;
 
@@ -98,7 +98,7 @@ class AnimatedCoinCount extends StatelessWidget {
   final int value;
   final TextStyle? style;
 
-  /// Text appended after the number, e.g. `' BECoins available'`.
+  /// Text appended after the number, e.g. `' BI Coins available'`.
   final String suffix;
 
   final Duration duration;

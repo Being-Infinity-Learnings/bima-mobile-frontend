@@ -120,10 +120,10 @@ void main() {
     ) async {
       await tester.pumpWidget(_app(QuizCoinReward(result: _result())));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('+41 BECoins'), findsNothing, reason: 'still counting');
+      expect(find.text('+41 BI Coins'), findsNothing, reason: 'still counting');
 
       await tester.pumpAndSettle();
-      expect(find.text('+41 BECoins'), findsOneWidget);
+      expect(find.text('+41 BI Coins'), findsOneWidget);
       expect(find.text('Based on your score'), findsOneWidget);
       expect(find.text('New balance'), findsOneWidget);
       expect(find.text('1,208'), findsOneWidget);
@@ -137,7 +137,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('+41 BECoins'), findsOneWidget);
+      expect(find.text('+41 BI Coins'), findsOneWidget);
       expect(find.text('1,208'), findsOneWidget);
     });
 
@@ -161,7 +161,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('+41 BECoins'), findsOneWidget);
+      expect(find.text('+41 BI Coins'), findsOneWidget);
       expect(find.text('New balance'), findsNothing);
     });
 
@@ -176,8 +176,8 @@ void main() {
 
       expect(
         find.bySemanticsLabel(
-          'Earned 41 BECoins. 36 for your score, plus 5 for finishing 1st. '
-          'New balance 1,208 BECoins.',
+          'Earned 41 BI Coins. 36 for your score, plus 5 for finishing 1st. '
+          'New balance 1,208 BI Coins.',
         ),
         findsOneWidget,
       );
@@ -189,12 +189,12 @@ void main() {
     testWidgets('shows the amount and an optional label', (tester) async {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
-        _app(const CoinAmountChip(amount: 1500, label: 'BECoins earned')),
+        _app(const CoinAmountChip(amount: 1500, label: 'BI Coins earned')),
       );
 
       expect(find.text('+1,500'), findsOneWidget);
-      expect(find.text('BECoins earned'), findsOneWidget);
-      expect(find.bySemanticsLabel('Earned 1,500 BECoins'), findsOneWidget);
+      expect(find.text('BI Coins earned'), findsOneWidget);
+      expect(find.bySemanticsLabel('Earned 1,500 BI Coins'), findsOneWidget);
       semantics.dispose();
     });
   });
@@ -231,7 +231,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.text('+12,345 BECoins'), findsOneWidget);
+        expect(find.text('+12,345 BI Coins'), findsOneWidget);
         expect(find.text('1,234,567'), findsOneWidget);
       });
 
@@ -271,7 +271,7 @@ void main() {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CoinAmountChip(amount: 12345, label: 'BECoins earned'),
+                  CoinAmountChip(amount: 12345, label: 'BI Coins earned'),
                 ],
               ),
             ),

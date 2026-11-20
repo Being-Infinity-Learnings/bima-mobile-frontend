@@ -181,7 +181,7 @@ class HistoryResult {
   final int score;
   final int totalQuestions;
 
-  /// BECoins the student earned in this quiz (0 when none).
+  /// BI Coins the student earned in this quiz (0 when none).
   final int coinsEarned;
 
   const HistoryResult({
@@ -485,7 +485,7 @@ class FinalResult {
   final int totalScore;
   final int totalParticipants;
 
-  /// BECoins earned in this quiz, including [coinBonus]. 0 when the quiz
+  /// BI Coins earned in this quiz, including [coinBonus]. 0 when the quiz
   /// doesn't reward coins or the student scored nothing.
   final int coinsEarned;
 

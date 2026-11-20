@@ -55,7 +55,7 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
 
   bool _sequenceStarted = false;
 
-  /// Set once the "Your result" card has popped in. The BECoins card waits
+  /// Set once the "Your result" card has popped in. The BI Coins card waits
   /// for this so the two don't animate on top of each other.
   bool _coinStageReached = false;
 
@@ -435,7 +435,7 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
                               isDark: isDark,
                             ),
                           ),
-                          // BECoins earned. Grows in smoothly, so the
+                          // BI Coins earned. Grows in smoothly, so the
                           // leaderboard below eases down instead of jumping,
                           // even when the coins arrive after the podium.
                           AnimatedSize(

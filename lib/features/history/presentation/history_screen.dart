@@ -823,7 +823,7 @@ class _DetailStat extends StatelessWidget {
   }
 }
 
-/// Full-width gold tile in the result sheet: "+41 BECoins, earned in this
+/// Full-width gold tile in the result sheet: "+41 BI Coins, earned in this
 /// quiz".
 class _CoinsEarnedTile extends StatelessWidget {
   final bool isDark;

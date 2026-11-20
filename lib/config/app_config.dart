@@ -132,11 +132,9 @@ class AppConfig {
   // Coins & Store
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// Name of the in-app currency: one word, like LeetCoins, always with a
-  /// capital "BE". Never show it in all caps: "BECOINS" hides where "BE"
-  /// ends.
-  static const coinName = 'BECoin';
-  static const coinNamePlural = 'BECoins';
+  /// Name of the in-app currency, singular and plural.
+  static const coinName = 'BI Coin';
+  static const coinNamePlural = 'BI Coins';
 
   /// Coin face gradient, from the highlight to the deep rim.
   static const coinGoldLight = Color(0xFFFFE28A);

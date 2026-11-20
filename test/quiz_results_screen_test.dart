@@ -143,7 +143,7 @@ void main() {
       expect(overflows, isEmpty);
       expect(find.text('1 player competed'), findsOneWidget);
       expect(find.text('You earned'), findsOneWidget);
-      expect(find.text('+42 BECoins'), findsOneWidget);
+      expect(find.text('+42 BI Coins'), findsOneWidget);
       expect(find.text('1,250'), findsOneWidget);
     });
   }

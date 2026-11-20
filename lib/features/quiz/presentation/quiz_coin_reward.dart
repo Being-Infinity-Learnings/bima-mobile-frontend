@@ -1,4 +1,4 @@
-/// The "BECoins earned" card on the quiz results screen.
+/// The "BI Coins earned" card on the quiz results screen.
 ///
 /// When it appears, the coin spins in and lands with a tap of haptics, the
 /// amount counts up, a few small coins burst out, a gold shine sweeps across
@@ -185,7 +185,7 @@ class _QuizCoinRewardState extends State<QuizCoinReward>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Reads as one phrase with the amount below:
-                    // "You earned +41 BECoins".
+                    // "You earned +41 BI Coins".
                     Text(
                       'You earned',
                       maxLines: 1,
@@ -197,7 +197,7 @@ class _QuizCoinRewardState extends State<QuizCoinReward>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    // "+41 BECoins" as one line, so the two sizes share a
+                    // "+41 BI Coins" as one line, so the two sizes share a
                     // baseline; it shrinks rather than overflows if huge.
                     AnimatedBuilder(
                       animation: _countUp,

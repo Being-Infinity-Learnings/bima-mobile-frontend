@@ -1,4 +1,4 @@
-/// A small gold "+41" pill for BECoins earned, used on History and Home.
+/// A small gold "+41" pill for BI Coins earned, used on History and Home.
 library;
 
 import 'package:flutter/material.dart';
@@ -9,7 +9,7 @@ import 'coin_basics.dart';
 class CoinAmountChip extends StatelessWidget {
   final int amount;
 
-  /// Text after the amount, e.g. "BECoins earned". Leave it out for a
+  /// Text after the amount, e.g. "BI Coins earned". Leave it out for a
   /// compact "+41".
   final String? label;
 
