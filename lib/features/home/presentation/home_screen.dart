@@ -416,10 +416,10 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'S';
 
-    // Top-aligned so the greeting lines up with the avatar, with the coin
-    // pill hanging below it.
+    // Greeting on the left; coin pill and avatar side by side on the right,
+    // all centred on one line.
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
@@ -456,6 +456,8 @@ class _Header extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 userName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -465,46 +467,42 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Avatar — tap to jump to the Profile tab.
-            GestureDetector(
-              onTap: onAvatarTap,
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppConfig.accentLime, AppConfig.accentLimeDeep],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppConfig.accentLime.withOpacity(0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+        const SizedBox(width: 12),
+        // Coin balance — tap to open the Store.
+        CoinBalancePill(onTap: onCoinsTap),
+        const SizedBox(width: 10),
+        // Avatar — tap to jump to the Profile tab.
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [AppConfig.accentLime, AppConfig.accentLimeDeep],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppConfig.accentLime.withOpacity(0.3),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
                 ),
-                child: Center(
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppConfig.bodyTextLight,
-                    ),
-                  ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppConfig.bodyTextLight,
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            // Coin balance — tap to open the Store.
-            CoinBalancePill(onTap: onCoinsTap),
-          ],
+          ),
         ),
       ],
     );

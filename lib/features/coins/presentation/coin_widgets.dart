@@ -1,5 +1,5 @@
-/// Coin UI tied to the signed-in student: the balance pill and the
-/// "Redeem coins" card. The basic pieces live in `coin_basics.dart`.
+/// Coin UI tied to the signed-in student: the live balance pill. The basic
+/// pieces live in `coin_basics.dart`.
 library;
 
 import 'package:flutter/material.dart';
@@ -149,93 +149,6 @@ class _CoinBalancePillState extends ConsumerState<CoinBalancePill>
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// "Redeem coins" card
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// A gold card showing the live balance with a call to action to spend it.
-class RedeemCoinsCard extends ConsumerWidget {
-  final VoidCallback onTap;
-
-  const RedeemCoinsCard({super.key, required this.onTap});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final balance = ref.watch(coinBalanceProvider) ?? 0;
-    final accent = AppConfig.coinTextColor(isDark);
-
-    return Semantics(
-      button: true,
-      label:
-          'Redeem ${AppConfig.coinNamePlural}. '
-          '${formatCoins(balance)} ${coinsLabel(balance)} available',
-      hint: 'Opens the Store',
-      excludeSemantics: true,
-      child: Material(
-        color: AppConfig.coinSurfaceColor(isDark),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppConfig.coinBorderColor(isDark)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap();
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppConfig.coinGold.withValues(
-                      alpha: isDark ? 0.12 : 0.2,
-                    ),
-                  ),
-                  child: const Center(child: CoinIcon(size: 28)),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Redeem ${AppConfig.coinNamePlural}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          color: AppConfig.bodyTextColor(isDark),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      AnimatedCoinCount(
-                        value: balance,
-                        suffix: ' ${coinsLabel(balance)} available',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: accent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, size: 22, color: accent),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

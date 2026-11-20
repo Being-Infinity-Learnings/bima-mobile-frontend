@@ -186,24 +186,6 @@ void main() {
         expect(find.text('Rewards are on the way'), findsOneWidget);
         expect(find.text('1,234,567'), findsOneWidget);
       });
-
-      testWidgets('Redeem coins card renders without overflow '
-          '(${brightness.name})', (tester) async {
-        await tester.pumpWidget(
-          build(
-            Scaffold(
-              body: Padding(
-                padding: const EdgeInsets.all(20),
-                child: RedeemCoinsCard(onTap: () {}),
-              ),
-            ),
-          ),
-        );
-
-        expect(tester.takeException(), isNull);
-        expect(find.text('1,234,567 BI Coins available'), findsOneWidget);
-        expect(find.text('Redeem BI Coins'), findsOneWidget);
-      });
     }
   });
 }

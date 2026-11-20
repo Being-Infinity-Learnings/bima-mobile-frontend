@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/app_config.dart';
-import '../../../core/navigation/app_tab.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../coins/presentation/coin_widgets.dart';
 import '../../../shared/enums/auth_status.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 import 'edit_profile_screen.dart';
@@ -156,11 +154,6 @@ class ProfileScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // ── Coin balance → Store ─────────────────────────────
-                    RedeemCoinsCard(onTap: () => ref.goToTab(AppTab.store)),
 
                     const SizedBox(height: 24),
 
