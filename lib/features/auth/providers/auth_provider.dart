@@ -379,6 +379,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Re-fetches the signed-in user's profile in the background, e.g. to pick
+  /// up a new coin balance. The auth status never changes here, and failures
+  /// are ignored so the last known data stays on screen.
+  Future<void> refreshUser() async {
+    final current = state.user;
+    if (state.status != AuthStatus.authenticated || current == null) return;
+
+    try {
+      final fresh = await _repo.getMyProfile();
+
+      // Skip if the user signed out or switched accounts while we waited.
+      if (state.status != AuthStatus.authenticated ||
+          state.user?.id != fresh.id) {
+        return;
+      }
+
+      state = state.copyWith(user: fresh);
+    } catch (e) {
+      debugPrint('[Auth] Background profile refresh failed: $e');
+    }
+  }
+
+  /// Applies a coin balance returned by the server (e.g. after a quiz or a
+  /// redemption) without another `/auth/me` round trip.
+  void setCoinBalance(int balance) {
+    final user = state.user;
+    if (user == null || user.coinBalance == balance) return;
+
+    state = state.copyWith(user: user.copyWith(coinBalance: balance));
+  }
+
   /// Clears any active authentication error message.
   void clearError() {
     if (state.errorMessage == null) {

@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../auth/providers/auth_provider.dart';
 import '../../../config/app_config.dart';
-import '../../../core/navigation/app_shell.dart';
+import '../../../core/navigation/app_tab.dart';
 import '../../../core/navigation/route_observer.dart';
+import '../../coins/presentation/coin_widgets.dart';
+import '../../coins/providers/coin_balance_provider.dart';
 import '../../history/presentation/history_screen.dart' show formatHistoryDate;
 import '../../quiz/data/quiz_models.dart';
 import '../../quiz/providers/quiz_providers.dart';
@@ -21,15 +24,6 @@ final _nowProvider = StreamProvider<DateTime>((ref) {
   return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
 });
 
-// Home tab index in AppShell's bottom nav.
-const int _homeTabIndex = 0;
-
-// History tab index in AppShell's bottom nav.
-const int _historyTabIndex = 1;
-
-// Profile tab index in AppShell's bottom nav.
-const int _profileTabIndex = 3;
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,7 +37,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   Timer? _autoRefreshTimer;
-  ProviderSubscription<int>? _tabListener;
+  ProviderSubscription<AppTab>? _tabListener;
 
   // How many upcoming quizzes are currently shown. Starts at one page and
   // grows by one page each time "Show more" is tapped.
@@ -70,8 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   // — i.e. never while another tab is showing, and never while the user
   // is off in the quiz flow.
   void _syncPolling() {
-    final isHomeTabSelected =
-        ref.read(selectedTabIndexProvider) == _homeTabIndex;
+    final isHomeTabSelected = ref.read(selectedTabProvider) == AppTab.home;
     final shouldPoll = isHomeTabSelected && _isTopRoute;
 
     if (shouldPoll) {
@@ -95,11 +88,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     // lands back on Home, and start/stop the poll accordingly.
     Future.microtask(() {
       if (!mounted) return;
-      _tabListener = ref.listenManual<int>(selectedTabIndexProvider, (
+      _tabListener = ref.listenManual<AppTab>(selectedTabProvider, (
         previous,
         next,
       ) {
-        final enteredHome = next == _homeTabIndex && previous != _homeTabIndex;
+        final enteredHome = next == AppTab.home && previous != AppTab.home;
         _syncPolling();
         if (enteredHome) {
           _refreshNow();
@@ -134,6 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     _isTopRoute = true;
     _syncPolling();
     _refreshNow();
+    ref.read(coinBalanceControllerProvider).refresh();
   }
 
   @override
@@ -144,13 +138,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     super.dispose();
   }
 
-  void _goToHistoryTab(WidgetRef ref) {
-    ref.read(selectedTabIndexProvider.notifier).state = _historyTabIndex;
-  }
+  void _goToHistoryTab(WidgetRef ref) => ref.goToTab(AppTab.history);
 
-  void _goToProfileTab(WidgetRef ref) {
-    ref.read(selectedTabIndexProvider.notifier).state = _profileTabIndex;
-  }
+  void _goToProfileTab(WidgetRef ref) => ref.goToTab(AppTab.profile);
+
+  void _goToStoreTab(WidgetRef ref) => ref.goToTab(AppTab.store);
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +183,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
               ref.invalidate(myQuizzesProvider);
               ref.invalidate(latestHistoryResultProvider);
               setState(() => _visibleQuizCount = _quizzesPageSize);
-              await ref.read(myQuizzesProvider.future);
+              await Future.wait([
+                ref.read(myQuizzesProvider.future),
+                ref.read(coinBalanceControllerProvider).refresh(force: true),
+              ]);
             },
             color: AppConfig.primaryColor,
             child: SingleChildScrollView(
@@ -210,6 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         greetingIcon: greetingIcon,
                         userName: user?.fullName ?? 'Student',
                         onAvatarTap: () => _goToProfileTab(ref),
+                        onCoinsTap: () => _goToStoreTab(ref),
                       ),
 
                       const SizedBox(height: 28),
@@ -376,6 +372,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         },
                       ),
 
+                      const SizedBox(height: 16),
+
+                      // ── Redeem coins ───────────────────────────────────
+                      _RedeemCoinsButton(
+                        isDark: isDark,
+                        onTap: () => _goToStoreTab(ref),
+                      ),
+
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -399,6 +403,7 @@ class _Header extends StatelessWidget {
   final IconData greetingIcon;
   final String userName;
   final VoidCallback onAvatarTap;
+  final VoidCallback onCoinsTap;
 
   const _Header({
     required this.isDark,
@@ -406,12 +411,15 @@ class _Header extends StatelessWidget {
     required this.greetingIcon,
     required this.userName,
     required this.onAvatarTap,
+    required this.onCoinsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'S';
 
+    // Greeting and name on the left, with the coin balance as a small chip
+    // beside the name; the avatar alone on the right, centred on both lines.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -419,39 +427,57 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Scales down instead of overflowing on very narrow phones.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      greeting,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: AppConfig.bodyTextColor(isDark),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      greetingIcon,
+                      size: 22,
+                      color: isDark
+                          ? AppConfig.accentLime
+                          : AppConfig.bodyTextLight,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
               Row(
                 children: [
-                  Text(
-                    greeting,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      color: AppConfig.bodyTextColor(isDark),
+                  Flexible(
+                    child: Text(
+                      userName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AppConfig.mutedTextColor(isDark),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    greetingIcon,
-                    size: 22,
-                    color: isDark
-                        ? AppConfig.accentLime
-                        : AppConfig.bodyTextLight,
-                  ),
+                  const SizedBox(width: 10),
+                  // Coin balance — tap to open the Store.
+                  CoinBalancePill(onTap: onCoinsTap, height: 28),
                 ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                userName,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppConfig.mutedTextColor(isDark),
-                ),
               ),
             ],
           ),
         ),
+        const SizedBox(width: 12),
         // Avatar — tap to jump to the Profile tab.
         GestureDetector(
           onTap: onAvatarTap,
@@ -963,6 +989,74 @@ class _LastResultCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Redeem coins — call to action that opens the Store tab.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RedeemCoinsButton extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _RedeemCoinsButton({required this.isDark, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = AppConfig.accentOnSurface(isDark, AppConfig.accentLime);
+
+    return Semantics(
+      button: true,
+      label: 'Redeem your ${AppConfig.coinNamePlural}',
+      hint: 'Opens the Store',
+      excludeSemantics: true,
+      child: Material(
+        color: isDark
+            ? Color.alphaBlend(
+                AppConfig.accentLime.withValues(alpha: 0.07),
+                AppConfig.darkCardColor,
+              )
+            : Color.alphaBlend(
+                AppConfig.accentLime.withValues(alpha: 0.16),
+                AppConfig.whiteColor,
+              ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: AppConfig.accentLime.withValues(alpha: isDark ? 0.3 : 0.7),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            child: Row(
+              children: [
+                Icon(Icons.redeem_rounded, size: 24, color: accent),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Redeem your ${AppConfig.coinNamePlural}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: AppConfig.bodyTextColor(isDark),
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, size: 22, color: accent),
+              ],
+            ),
           ),
         ),
       ),

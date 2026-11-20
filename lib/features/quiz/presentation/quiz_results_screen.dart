@@ -9,6 +9,7 @@ import '../data/quiz_models.dart';
 import '../providers/quiz_providers.dart';
 import 'quiz_coin_reward.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../coins/providers/coin_balance_provider.dart';
 import '../../../config/app_config.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 
@@ -220,9 +221,11 @@ class _QuizResultsScreenState extends ConsumerState<QuizResultsScreen>
   // Force the Home tab's quiz list / recent activity to refetch immediately
   // (rather than waiting for its 10s poll) so this just-completed quiz
   // doesn't linger in "Upcoming Quizzes" for even a moment after we land back.
+  // The coin balance is refreshed too, since this quiz may have awarded coins.
   void _backToHome(BuildContext context) {
     ref.invalidate(myQuizzesProvider);
     ref.invalidate(latestHistoryResultProvider);
+    ref.read(coinBalanceControllerProvider).refresh(force: true);
     context.go('/home');
   }
 
