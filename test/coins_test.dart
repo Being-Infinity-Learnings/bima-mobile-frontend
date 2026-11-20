@@ -34,9 +34,9 @@ void main() {
     });
 
     test('names the currency, singular or plural', () {
-      expect(coinsLabel(1), 'BE Coin');
-      expect(coinsLabel(0), 'BE Coins');
-      expect(coinsLabel(420), 'BE Coins');
+      expect(coinsLabel(1), 'BECoin');
+      expect(coinsLabel(0), 'BECoins');
+      expect(coinsLabel(420), 'BECoins');
     });
   });
 
@@ -201,8 +201,8 @@ void main() {
         );
 
         expect(tester.takeException(), isNull);
-        expect(find.text('1,234,567 BE Coins available'), findsOneWidget);
-        expect(find.text('Redeem BE Coins'), findsOneWidget);
+        expect(find.text('1,234,567 BECoins available'), findsOneWidget);
+        expect(find.text('Redeem BECoins'), findsOneWidget);
       });
     }
   });

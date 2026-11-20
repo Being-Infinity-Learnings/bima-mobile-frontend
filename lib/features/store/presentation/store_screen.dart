@@ -79,13 +79,15 @@ class StoreScreen extends ConsumerWidget {
 
                       const SizedBox(height: 28),
 
+                      // Sentence case on purpose: the currency name is never
+                      // shown in all caps.
                       Text(
-                        'HOW TO EARN ${AppConfig.coinNamePlural.toUpperCase()}',
+                        'How to earn ${AppConfig.coinNamePlural}',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 1.4,
-                          color: AppConfig.mutedTextColor(isDark),
+                          letterSpacing: -0.2,
+                          color: AppConfig.bodyTextColor(isDark),
                         ),
                       ),
 
