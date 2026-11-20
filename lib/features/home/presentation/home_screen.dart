@@ -416,8 +416,8 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'S';
 
-    // Greeting on the left; coin pill and avatar side by side on the right,
-    // all centred on one line.
+    // Greeting and name on the left, with the coin balance as a small chip
+    // beside the name; the avatar alone on the right, centred on both lines.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -425,8 +425,7 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Scales down instead of overflowing when a narrow phone and a
-              // large coin balance leave the greeting less room.
+              // Scales down instead of overflowing on very narrow phones.
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -453,24 +452,30 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                userName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppConfig.mutedTextColor(isDark),
-                ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      userName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AppConfig.mutedTextColor(isDark),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Coin balance — tap to open the Store.
+                  CoinBalancePill(onTap: onCoinsTap, height: 28),
+                ],
               ),
             ],
           ),
         ),
         const SizedBox(width: 12),
-        // Coin balance — tap to open the Store.
-        CoinBalancePill(onTap: onCoinsTap),
-        const SizedBox(width: 10),
         // Avatar — tap to jump to the Profile tab.
         GestureDetector(
           onTap: onAvatarTap,

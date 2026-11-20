@@ -24,7 +24,10 @@ export 'coin_basics.dart';
 class CoinBalancePill extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
 
-  const CoinBalancePill({super.key, this.onTap});
+  /// The pill's height; the coin, the number and the padding scale with it.
+  final double height;
+
+  const CoinBalancePill({super.key, this.onTap, this.height = 30});
 
   @override
   ConsumerState<CoinBalancePill> createState() => _CoinBalancePillState();
@@ -83,8 +86,12 @@ class _CoinBalancePillState extends ConsumerState<CoinBalancePill>
       }
     });
 
+    // Everything scales with the height; at the default 30 this is an 18pt
+    // coin and 14pt digits. The coin sits in the round end like a badge.
+    final height = widget.height;
+    final coinSize = height * 0.6;
     final amountStyle = TextStyle(
-      fontSize: 14,
+      fontSize: height * 0.47,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.2,
       color: AppConfig.coinTextColor(isDark),
@@ -98,13 +105,17 @@ class _CoinBalancePillState extends ConsumerState<CoinBalancePill>
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: widget.onTap == null ? null : _handleTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(7, 6, 12, 6),
+        child: Container(
+          height: height,
+          padding: EdgeInsets.only(
+            left: (height - coinSize) / 2,
+            right: height * 0.4,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CoinIcon(size: 18),
-              const SizedBox(width: 6),
+              CoinIcon(size: coinSize),
+              SizedBox(width: height * 0.2),
               if (balance == null)
                 Text('—', style: amountStyle)
               else
