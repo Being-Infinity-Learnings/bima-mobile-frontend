@@ -5,6 +5,8 @@ import '../../../config/app_config.dart';
 import '../../../core/navigation/app_tab.dart';
 import '../../quiz/data/quiz_models.dart';
 import '../../quiz/data/quiz_repository.dart';
+import '../../coins/presentation/coin_amount_chip.dart';
+import '../../coins/presentation/coin_basics.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
@@ -391,6 +393,10 @@ class _ResultCard extends StatelessWidget {
   final HistoryResult result;
   final VoidCallback onTap;
 
+  /// Matches the backend's MAX_SCORE_PER_QUESTION, so the score bar shows
+  /// the real share of the best possible score.
+  static const _maxScorePerQuestion = 1000;
+
   const _ResultCard({
     required this.isDark,
     required this.result,
@@ -463,14 +469,25 @@ class _ResultCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      result.title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: AppConfig.bodyTextColor(isDark),
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            result.title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              color: AppConfig.bodyTextColor(isDark),
+                            ),
+                          ),
+                        ),
+                        if (result.coinsEarned > 0) ...[
+                          const SizedBox(width: 8),
+                          CoinAmountChip(amount: result.coinsEarned),
+                        ],
+                      ],
                     ),
 
                     const SizedBox(height: 6),
@@ -515,7 +532,8 @@ class _ResultCard extends StatelessWidget {
                     _ScoreBar(
                       isDark: isDark,
                       score: result.score,
-                      maxScore: (result.totalQuestions * 100).clamp(1, 1 << 30),
+                      maxScore: (result.totalQuestions * _maxScorePerQuestion)
+                          .clamp(1, 1 << 30),
                       rankColor: _rankColor,
                     ),
                   ],
@@ -709,6 +727,11 @@ class _ResultDetailSheet extends StatelessWidget {
             ],
           ),
 
+          if (result.coinsEarned > 0) ...[
+            const SizedBox(height: 12),
+            _CoinsEarnedTile(isDark: isDark, amount: result.coinsEarned),
+          ],
+
           const SizedBox(height: 24),
 
           // Note about limited history
@@ -788,6 +811,73 @@ class _DetailStat extends StatelessWidget {
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: AppConfig.accentOnSurface(isDark, color),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-width gold tile in the result sheet: "+41 BI Coins, earned in this
+/// quiz".
+class _CoinsEarnedTile extends StatelessWidget {
+  final bool isDark;
+  final int amount;
+
+  const _CoinsEarnedTile({required this.isDark, required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: 'Earned ${formatCoins(amount)} ${coinsLabel(amount)} in this quiz',
+      excludeSemantics: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppConfig.coinGold.withValues(alpha: isDark ? 0.14 : 0.2),
+              AppConfig.coinSurfaceColor(isDark),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppConfig.coinBorderColor(isDark)),
+        ),
+        child: Row(
+          children: [
+            const CoinIcon(size: 36),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Earned in this quiz',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppConfig.mutedTextColor(isDark),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '+${formatCoins(amount)} ${coinsLabel(amount)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppConfig.coinTextColor(isDark),
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

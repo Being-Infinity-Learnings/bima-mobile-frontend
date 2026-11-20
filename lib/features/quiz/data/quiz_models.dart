@@ -5,11 +5,14 @@
 /// These models mirror the JSON shapes returned by:
 ///   • REST  : GET /quiz/my            → List<MyQuizSummary>
 ///             GET /quiz/my/:quizId    → MyQuizDetail
+///             GET /quiz/my/history    → HistoryPage (with coins earned)
 ///   • Socket: quizJoined / runtimeUpdated → RuntimeState
 ///             leaderboardUpdated          → List<LeaderboardEntry>
 ///             questionResults              → QuestionResult
-///             finalResults                 → FinalResult
+///             finalResults                 → FinalResult (with coins earned)
 library quiz_models;
+
+import 'dart:math' as math;
 
 /// Card shown on the Home screen "Upcoming Quizzes" list.
 /// Comes from `GET /quiz/my`.
@@ -178,6 +181,9 @@ class HistoryResult {
   final int score;
   final int totalQuestions;
 
+  /// BI Coins the student earned in this quiz (0 when none).
+  final int coinsEarned;
+
   const HistoryResult({
     required this.quizId,
     required this.title,
@@ -186,6 +192,7 @@ class HistoryResult {
     required this.totalParticipants,
     required this.score,
     required this.totalQuestions,
+    this.coinsEarned = 0,
   });
 
   factory HistoryResult.fromJson(Map<String, dynamic> json) {
@@ -197,6 +204,7 @@ class HistoryResult {
       totalParticipants: (json['totalParticipants'] as num?)?.toInt() ?? 0,
       score: (json['score'] as num?)?.toInt() ?? 0,
       totalQuestions: (json['totalQuestions'] as num?)?.toInt() ?? 0,
+      coinsEarned: (json['coinsEarned'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -471,22 +479,46 @@ class QuestionResult {
 }
 
 /// Emitted (per-user, targeted) via `finalResults` when the quiz ends.
+/// The backend sends it again if the student rejoins during the results.
 class FinalResult {
   final int? rank;
   final int totalScore;
   final int totalParticipants;
 
+  /// BI Coins earned in this quiz, including [coinBonus]. 0 when the quiz
+  /// doesn't reward coins or the student scored nothing.
+  final int coinsEarned;
+
+  /// The part of [coinsEarned] that's a podium bonus for finishing in the
+  /// top 3 (only when more than 3 students played).
+  final int coinBonus;
+
+  /// The student's balance after this quiz's coins were added. Only sent
+  /// when [coinsEarned] > 0.
+  final int? coinBalance;
+
   const FinalResult({
     required this.rank,
     required this.totalScore,
     required this.totalParticipants,
+    this.coinsEarned = 0,
+    this.coinBonus = 0,
+    this.coinBalance,
   });
+
+  bool get hasCoins => coinsEarned > 0;
+
+  /// Coins earned for the score alone, without the podium bonus.
+  int get scoreCoins => math.max(coinsEarned - coinBonus, 0);
 
   factory FinalResult.fromJson(Map<String, dynamic> json) {
     return FinalResult(
       rank: (json['rank'] as num?)?.toInt(),
       totalScore: (json['totalScore'] as num?)?.toInt() ?? 0,
       totalParticipants: (json['totalParticipants'] as num?)?.toInt() ?? 0,
+      coinsEarned: (json['coinsEarned'] as num?)?.toInt() ?? 0,
+      coinBonus: (json['coinBonus'] as num?)?.toInt() ?? 0,
+      coinBalance: (json['coinBalance'] as num?)?.toInt(),
     );
   }
 }
